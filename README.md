@@ -44,6 +44,8 @@ The system follows a three-step process:
 
 ## Installation
 
+### Standard Installation
+
 1. Clone this repository:
    ```
    git clone https://github.com/vedansh200301/Atishay_work.git
@@ -62,7 +64,24 @@ The system follows a three-step process:
    mkdir -p uploads results screenshots
    ```
 
+### Docker Installation
+
+1. Clone this repository:
+   ```
+   git clone https://github.com/vedansh200301/Atishay_work.git
+   cd Atishay_work
+   ```
+
+2. Build and run with Docker Compose:
+   ```
+   docker-compose up -d
+   ```
+
+3. The application will be available at http://localhost:5000
+
 ## Usage
+
+### Running with Python
 
 1. Start the Flask application:
    ```
@@ -74,19 +93,29 @@ The system follows a three-step process:
    http://localhost:5000
    ```
 
-3. Upload an Excel file containing PAN numbers
+### Running with Docker
 
-4. Configure processing parameters:
+1. The application should be running after the Docker installation steps
+2. Open your browser and navigate to:
+   ```
+   http://localhost:5000
+   ```
+
+### Using the Application
+
+1. Upload an Excel file containing PAN numbers
+
+2. Configure processing parameters:
    - Headless Mode: Run browser in background
    - Test Mode: Process only a few PANs for testing
    - Processing Limit: Maximum number of PANs to process
    - Resume: Continue from last checkpoint
 
-5. Click "Upload and Start Processing"
+3. Click "Upload and Start Processing"
 
-6. Monitor the progress on the results page
+4. Monitor the progress on the results page
 
-7. When processing completes, download the enriched file
+5. When processing completes, download the enriched file
 
 ## Process Flow
 
@@ -107,11 +136,20 @@ For more detailed information, refer to these documentation files:
 
 ## Troubleshooting
 
+### Standard Installation
+
 - **File Upload Issues**: Ensure the file is in Excel (.xlsx, .xls) or CSV format
 - **Processing Errors**: Check the logs (flask_pan_gstin.log, pan_gstin_mapper_enhanced.log)
 - **Browser Automation Issues**: Try disabling headless mode for debugging
 - **Captcha Problems**: Verify TrueCaptcha API credentials are valid
 - **SignalX Timeouts**: The system will automatically retry with increased timeouts
+
+### Docker Installation
+
+- **Container Not Starting**: Check Docker logs with `docker-compose logs`
+- **Permission Issues**: Ensure the volumes have correct permissions
+- **Browser Issues**: The Docker container includes Chrome and ChromeDriver
+- **Port Conflicts**: If port 5000 is in use, modify the port mapping in docker-compose.yml
 
 ## Contributing
 

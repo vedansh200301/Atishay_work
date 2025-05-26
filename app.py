@@ -542,5 +542,17 @@ if __name__ == '__main__':
     # Load existing jobs data
     load_jobs_from_file()
     
+    # Create necessary directories
+    os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+    os.makedirs(RESULTS_FOLDER, exist_ok=True)
+    os.makedirs('screenshots', exist_ok=True)
+    
+    # Determine if running in Docker
+    in_docker = os.environ.get('DOCKER_CONTAINER', False)
+    
     # Run the Flask app
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    app.run(
+        debug=os.environ.get('FLASK_ENV') == 'development',
+        host='0.0.0.0',  # Bind to all interfaces for Docker
+        port=int(os.environ.get('PORT', 5000))
+    )

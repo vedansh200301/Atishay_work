@@ -1,0 +1,16 @@
+version: '3'
+
+services:
+  gstin-app:
+    build: .
+    container_name: gstin-details-app
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./uploads:/app/uploads
+      - ./results:/app/results
+      - ./screenshots:/app/screenshots
+    environment:
+      - FLASK_ENV=production
+      - PYTHONUNBUFFERED=1
+    restart: unless-stopped
