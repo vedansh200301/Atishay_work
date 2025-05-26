@@ -1,0 +1,181 @@
+/* Custom styles for PAN-GSTIN Mapper Web Interface */
+
+/* General styles */
+body {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.container {
+    flex: 1;
+}
+
+.footer {
+    margin-top: auto;
+}
+
+/* Card styling */
+.card {
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    margin-bottom: 2rem;
+}
+
+.card-header {
+    font-weight: 500;
+}
+
+/* Form styling */
+.form-label {
+    font-weight: 500;
+}
+
+/* Progress bar styling */
+.progress {
+    height: 25px;
+    border-radius: 0.25rem;
+}
+
+.progress-bar {
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+/* Alert styling */
+.alert {
+    border-left: 4px solid;
+}
+
+.alert-info {
+    border-left-color: #0dcaf0;
+}
+
+.alert-success {
+    border-left-color: #198754;
+}
+
+.alert-warning {
+    border-left-color: #ffc107;
+}
+
+.alert-danger {
+    border-left-color: #dc3545;
+}
+
+/* Table styling */
+.table th {
+    font-weight: 600;
+}
+
+/* Pre tag styling for error messages */
+pre {
+    background-color: #f8f9fa;
+    border-radius: 0.25rem;
+    padding: 1rem;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .btn-group {
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .btn-group .btn {
+        margin-bottom: 0.25rem;
+        border-radius: 0.25rem !important;
+    }
+}
+
+/* Add some spacing to the job details section */
+.job-details {
+    padding: 1rem;
+    background-color: #f8f9fa;
+    border-radius: 0.25rem;
+}
+
+/* Make badges more visible */
+.badge {
+    font-size: 0.9rem;
+    padding: 0.5em 0.75em;
+}
+
+/* GSTIN link styling */
+.gstin-link {
+    color: #0d6efd;
+    text-decoration: none;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.gstin-link:hover {
+    color: #0a58ca;
+    text-decoration: underline;
+}
+
+/* GSTIN modal styling */
+#gstinDetailsModal .modal-header {
+    border-bottom: 3px solid #0d6efd;
+}
+
+#gstinDetailsModal .modal-body {
+    padding: 1.5rem;
+}
+
+/* Loading spinner styling */
+#gstin-loading {
+    min-height: 200px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+#gstin-loading .spinner-border {
+    width: 3rem;
+    height: 3rem;
+}
+
+/* GSTIN details table styling */
+#gstin-details .row {
+    padding: 0.5rem 0;
+    border-bottom: 1px solid #e9ecef;
+}
+
+#gstin-details .fw-bold {
+    color: #495057;
+}
+
+/* HSN codes table styling */
+#modal-hsn-codes tr:hover {
+    background-color: #f8f9fa;
+}
+
+/* GSTIN table section styling */
+.gstin-table-section {
+    margin-top: 1.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #dee2e6;
+}
+
+.gstin-table-section h5 {
+    margin-bottom: 0.5rem;
+}
+
+/* Responsive adjustments for the modal */
+@media (max-width: 768px) {
+    #gstinDetailsModal .modal-dialog {
+        margin: 0.5rem;
+        max-width: calc(100% - 1rem);
+    }
+    
+    #gstin-details .row {
+        flex-direction: column;
+    }
+    
+    #gstin-details .col-md-4 {
+        margin-bottom: 0.25rem;
+    }
+}

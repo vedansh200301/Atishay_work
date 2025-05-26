@@ -1,0 +1,604 @@
+{% extends "layout.html" %}
+
+{% block title %}PAN-GSTIN Mapper - Results{% endblock %}
+
+{% block head %}
+<meta http-equiv="refresh" content="10" data-disable-if-completed="true">
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-10 offset-md-1">
+        <div class="card">
+            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                <h2 class="card-title mb-0">Processing Results</h2>
+                <a href="{{ url_for('home') }}" class="btn btn-light btn-sm">New Job</a>
+            </div>
+            <div class="card-body">
+                <div class="job-details mb-4">
+                    <h4>Job Details</h4>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>Job ID:</strong> <span class="text-muted">{{ job.id }}</span></p>
+                            <p><strong>File:</strong> <span class="text-muted">{{ job.filename }}</span></p>
+                            <p><strong>Created:</strong> <span class="text-muted" id="created-time">{{ job.created_at }}</span></p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Status:</strong> <span id="job-status" class="badge 
+                                {% if job.status == 'completed' %}bg-success
+                                {% elif job.status == 'failed' %}bg-danger
+                                {% elif job.status == 'processing' %}bg-primary
+                                {% else %}bg-secondary{% endif %}">
+                                {{ job.status|capitalize }}
+                            </span></p>
+                            <p><strong>Parameters:</strong> 
+                                <span class="text-muted">
+                                    {% if job.parameters.headless %}Headless{% else %}UI Mode{% endif %},
+                                    {% if job.parameters.test_mode %}Test Mode{% else %}Full Mode{% endif %}
+                                    {% if job.parameters.limit %}, Limit: {{ job.parameters.limit }}{% endif %}
+                                    {% if job.parameters.resume %}, Resume Enabled{% endif %}
+                                </span>
+                            </p>
+                            {% if job.start_time %}
+                            <p><strong>Started:</strong> <span class="text-muted" id="start-time">{{ job.start_time }}</span></p>
+                            {% endif %}
+                            {% if job.end_time %}
+                            <p><strong>Completed:</strong> <span class="text-muted" id="end-time">{{ job.end_time }}</span></p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <div id="progress-section" class="mb-4 {% if job.status != 'processing' %}d-none{% endif %}">
+                    <h4>Processing Progress</h4>
+                    <div class="progress mb-3" style="height: 25px;">
+                        <div id="progress-bar" class="progress-bar progress-bar-striped progress-bar-animated" 
+                             role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
+                            0%
+                        </div>
+                    </div>
+                    <p id="progress-text" class="text-center">Initializing...</p>
+                </div>
+
+                <div id="result-section" class="mb-4 {% if job.status != 'completed' %}d-none{% endif %}">
+                    <h4>Results</h4>
+                    <div class="alert alert-success">
+                        <h5><i class="bi bi-check-circle-fill"></i> Processing Completed Successfully</h5>
+                        <p>The PAN-GSTIN mapping process has been completed. You can download the results file below.</p>
+                    </div>
+                    
+                    <div class="d-grid gap-2 mb-4">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <a href="{{ url_for('download_results', job_id=job.id) }}" class="btn btn-success btn-lg w-100">
+                                    <i class="bi bi-download"></i> Download Results
+                                </a>
+                            </div>
+                            <div class="col-md-6">
+                                <button id="update-gstin-details-btn" class="btn btn-primary btn-lg w-100">
+                                    <i class="bi bi-arrow-repeat"></i> Update GSTIN Details
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- GSTIN Table Section -->
+                    <div class="gstin-table-section">
+                        <h5>GSTIN Information</h5>
+                        <p class="text-muted">Click on any GSTIN to view detailed information</p>
+                        
+                        <div class="table-responsive">
+                            <table class="table table-striped table-hover">
+                                <thead class="table-primary">
+                                    <tr>
+                                        <th>PAN</th>
+                                        <th>GSTIN</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="gstin-table-body">
+                                    {% if job.results and job.results.pan_gstin_map %}
+                                        {% for pan, gstins in job.results.pan_gstin_map.items() %}
+                                            {% for gstin in gstins %}
+                                                <tr>
+                                                    <td>{{ pan }}</td>
+                                                    <td>
+                                                        <a href="#" class="gstin-link" data-gstin="{{ gstin }}">
+                                                            {{ gstin }}
+                                                        </a>
+                                                    </td>
+                                                    <td>
+                                                        <span class="badge bg-success">Active</span>
+                                                    </td>
+                                                </tr>
+                                            {% endfor %}
+                                        {% endfor %}
+                                    {% else %}
+                                        <tr>
+                                            <td colspan="3" class="text-center">No GSTIN data available</td>
+                                        </tr>
+                                    {% endif %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="error-section" class="mb-4 {% if job.status != 'failed' %}d-none{% endif %}">
+                    <h4>Error Information</h4>
+                    <div class="alert alert-danger">
+                        <h5><i class="bi bi-exclamation-triangle-fill"></i> Processing Failed</h5>
+                        <p>The PAN-GSTIN mapping process encountered an error:</p>
+                        <pre id="error-message" class="bg-light p-3 mt-2">{{ job.error }}</pre>
+                    </div>
+                    
+                    <div class="d-grid gap-2">
+                        <a href="{{ url_for('home') }}" class="btn btn-primary btn-lg">
+                            <i class="bi bi-arrow-repeat"></i> Try Again
+                        </a>
+                    </div>
+                </div>
+
+                <div id="queued-section" class="mb-4 {% if job.status != 'queued' %}d-none{% endif %}">
+                    <h4>Job Queued</h4>
+                    <div class="alert alert-info">
+                        <h5><i class="bi bi-hourglass-split"></i> Waiting to Start</h5>
+                        <p>Your job is queued and will start processing shortly. This page will automatically update.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Format dates to be more readable
+        function formatDate(isoString) {
+            if (!isoString) return '';
+            const date = new Date(isoString);
+            return date.toLocaleString();
+        }
+        
+        // Format all date fields
+        document.querySelectorAll('#created-time, #start-time, #end-time').forEach(el => {
+            if (el.textContent) {
+                el.textContent = formatDate(el.textContent);
+            }
+        });
+        
+        // Only poll for updates if job is not completed or failed
+        const jobStatus = "{{ job.status }}";
+        if (jobStatus === 'processing' || jobStatus === 'queued') {
+            // Set up polling for job status
+            const jobId = "{{ job.id }}";
+            const pollInterval = 5000; // 5 seconds
+            
+            function updateJobStatus() {
+                fetch(`/job_status/${jobId}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        // Update status badge
+                        const statusBadge = document.getElementById('job-status');
+                        statusBadge.textContent = data.status.charAt(0).toUpperCase() + data.status.slice(1);
+                        
+                        // Update badge color
+                        statusBadge.className = 'badge';
+                        if (data.status === 'completed') {
+                            statusBadge.classList.add('bg-success');
+                            document.getElementById('result-section').classList.remove('d-none');
+                            document.getElementById('progress-section').classList.add('d-none');
+                            document.getElementById('queued-section').classList.add('d-none');
+                            
+                            // Stop auto-refresh
+                            const meta = document.querySelector('meta[http-equiv="refresh"]');
+                            if (meta && meta.hasAttribute('data-disable-if-completed')) {
+                                meta.remove();
+                            }
+                        } else if (data.status === 'failed') {
+                            statusBadge.classList.add('bg-danger');
+                            document.getElementById('error-section').classList.remove('d-none');
+                            document.getElementById('progress-section').classList.add('d-none');
+                            document.getElementById('queued-section').classList.add('d-none');
+                            
+                            // Update error message
+                            if (data.error) {
+                                document.getElementById('error-message').textContent = data.error;
+                            }
+                            
+                            // Stop auto-refresh
+                            const meta = document.querySelector('meta[http-equiv="refresh"]');
+                            if (meta && meta.hasAttribute('data-disable-if-completed')) {
+                                meta.remove();
+                            }
+                        } else if (data.status === 'processing') {
+                            statusBadge.classList.add('bg-primary');
+                            document.getElementById('progress-section').classList.remove('d-none');
+                            document.getElementById('queued-section').classList.add('d-none');
+                            
+                            // Update progress if available
+                            if (data.progress) {
+                                const progressBar = document.getElementById('progress-bar');
+                                const progressText = document.getElementById('progress-text');
+                                
+                                if (data.progress.processed_count) {
+                                    // We don't know the total, so just show count
+                                    progressText.textContent = `Processed ${data.progress.processed_count} PAN numbers`;
+                                    
+                                    // Update progress bar (indeterminate)
+                                    progressBar.style.width = '100%';
+                                    progressBar.textContent = 'Processing...';
+                                }
+                            }
+                        } else {
+                            statusBadge.classList.add('bg-secondary');
+                        }
+                        
+                        // Update timestamps
+                        if (data.start_time) {
+                            const startTimeEl = document.getElementById('start-time');
+                            if (startTimeEl) {
+                                startTimeEl.textContent = formatDate(data.start_time);
+                            } else {
+                                // Create element if it doesn't exist
+                                const container = document.querySelector('.job-details .col-md-6:last-child');
+                                const p = document.createElement('p');
+                                p.innerHTML = `<strong>Started:</strong> <span class="text-muted" id="start-time">${formatDate(data.start_time)}</span>`;
+                                container.appendChild(p);
+                            }
+                        }
+                        
+                        if (data.end_time) {
+                            const endTimeEl = document.getElementById('end-time');
+                            if (endTimeEl) {
+                                endTimeEl.textContent = formatDate(data.end_time);
+                            } else {
+                                // Create element if it doesn't exist
+                                const container = document.querySelector('.job-details .col-md-6:last-child');
+                                const p = document.createElement('p');
+                                p.innerHTML = `<strong>Completed:</strong> <span class="text-muted" id="end-time">${formatDate(data.end_time)}</span>`;
+                                container.appendChild(p);
+                            }
+                        }
+                        
+                        // Continue polling if job is still in progress
+                        if (data.status === 'processing' || data.status === 'queued') {
+                            setTimeout(updateJobStatus, pollInterval);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error fetching job status:', error);
+                        setTimeout(updateJobStatus, pollInterval);
+                    });
+            }
+            
+            // Start polling
+            setTimeout(updateJobStatus, pollInterval);
+        }
+    });
+</script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize GSTIN details modal
+        const gstinDetailsModal = new bootstrap.Modal(document.getElementById('gstinDetailsModal'), {
+            backdrop: 'static'
+        });
+        
+        // Add click event to GSTIN links
+        document.querySelectorAll('.gstin-link').forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                const gstin = this.getAttribute('data-gstin');
+                showGstinDetails(gstin, gstinDetailsModal);
+            });
+        });
+        
+        // Function to show GSTIN details
+        function showGstinDetails(gstin, modal) {
+            // Reset modal state
+            resetGstinModal();
+            
+            // Show the modal
+            modal.show();
+            
+            // Show loading state
+            document.getElementById('gstin-loading').classList.remove('d-none');
+            
+            // Fetch GSTIN details
+            fetch(`/gstin_details/${gstin}`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! Status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    // Hide loading state
+                    document.getElementById('gstin-loading').classList.add('d-none');
+                    
+                    // Show details
+                    displayGstinDetails(gstin, data);
+                })
+                .catch(error => {
+                    // Hide loading state
+                    document.getElementById('gstin-loading').classList.add('d-none');
+                    
+                    // Show error
+                    const errorElement = document.getElementById('gstin-error');
+                    const errorMessageElement = document.getElementById('gstin-error-message');
+                    
+                    errorElement.classList.remove('d-none');
+                    errorMessageElement.textContent = `Failed to fetch details for GSTIN ${gstin}: ${error.message}`;
+                    
+                    console.error('Error fetching GSTIN details:', error);
+                });
+        }
+        
+        // Function to reset the GSTIN modal
+        function resetGstinModal() {
+            // Hide all sections
+            document.getElementById('gstin-loading').classList.add('d-none');
+            document.getElementById('gstin-error').classList.add('d-none');
+            document.getElementById('gstin-details').classList.add('d-none');
+            
+            // Clear previous data
+            document.getElementById('modal-gstin').textContent = '';
+            document.getElementById('modal-trade-name').textContent = '';
+            document.getElementById('modal-reg-date').textContent = '';
+            document.getElementById('modal-hsn-codes').innerHTML = '';
+        }
+        
+        // Function to display GSTIN details
+        function displayGstinDetails(gstin, data) {
+            // Show details section
+            const detailsSection = document.getElementById('gstin-details');
+            detailsSection.classList.remove('d-none');
+            
+            // Populate basic details
+            document.getElementById('modal-gstin').textContent = gstin;
+            document.getElementById('modal-trade-name').textContent = data.trade_name || 'Not available';
+            document.getElementById('modal-reg-date').textContent = data.registration_date || 'Not available';
+            
+            // Populate HSN codes
+            const hsnTableBody = document.getElementById('modal-hsn-codes');
+            hsnTableBody.innerHTML = '';
+            
+            if (data.hsn_codes && data.hsn_codes.length > 0) {
+                data.hsn_codes.forEach(hsn => {
+                    const row = document.createElement('tr');
+                    
+                    const codeCell = document.createElement('td');
+                    codeCell.textContent = hsn;
+                    row.appendChild(codeCell);
+                    
+                    const descCell = document.createElement('td');
+                    descCell.textContent = 'Description not available';
+                    row.appendChild(descCell);
+                    
+                    hsnTableBody.appendChild(row);
+                });
+            } else {
+                const row = document.createElement('tr');
+                const cell = document.createElement('td');
+                cell.colSpan = 2;
+                cell.textContent = 'No HSN codes available';
+                cell.className = 'text-center';
+                row.appendChild(cell);
+                hsnTableBody.appendChild(row);
+            }
+            
+            // Show Excel update status if available
+            if (data.excel_updated !== undefined) {
+                const updateStatusRow = document.createElement('div');
+                updateStatusRow.className = 'row mb-3 mt-4';
+                
+                const labelCol = document.createElement('div');
+                labelCol.className = 'col-md-4 fw-bold';
+                labelCol.textContent = 'Excel Update:';
+                updateStatusRow.appendChild(labelCol);
+                
+                const valueCol = document.createElement('div');
+                valueCol.className = 'col-md-8';
+                
+                if (data.excel_updated) {
+                    valueCol.innerHTML = '<span class="badge bg-success">Updated</span>';
+                    if (data.excel_file) {
+                        valueCol.innerHTML += ` <span class="text-muted">(${data.excel_file})</span>`;
+                    }
+                } else {
+                    valueCol.innerHTML = '<span class="badge bg-warning">Not Updated</span>';
+                    if (data.excel_update_error) {
+                        valueCol.innerHTML += ` <span class="text-muted">(${data.excel_update_error})</span>`;
+                    }
+                }
+                
+                updateStatusRow.appendChild(valueCol);
+                detailsSection.appendChild(updateStatusRow);
+            }
+        }
+    });
+</script>
+{% endblock %}
+
+<!-- GSTIN Details Modal -->
+<div class="modal fade" id="gstinDetailsModal" tabindex="-1" aria-labelledby="gstinDetailsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="gstinDetailsModalLabel">GSTIN Details</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="gstin-loading" class="text-center py-4">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-2">Fetching GSTIN details...</p>
+                </div>
+                
+                <div id="gstin-error" class="alert alert-danger d-none">
+                    <h5><i class="bi bi-exclamation-triangle-fill"></i> Error</h5>
+                    <p id="gstin-error-message">Failed to fetch GSTIN details.</p>
+                </div>
+                
+                <div id="gstin-details" class="d-none">
+                    <div class="row mb-3">
+                        <div class="col-md-4 fw-bold">GSTIN:</div>
+                        <div class="col-md-8" id="modal-gstin"></div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-4 fw-bold">Trade Name:</div>
+                        <div class="col-md-8" id="modal-trade-name"></div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-4 fw-bold">Registration Date:</div>
+                        <div class="col-md-8" id="modal-reg-date"></div>
+                    </div>
+                    
+                    <h6 class="mt-4 mb-3">HSN Codes</h6>
+                    <div class="table-responsive">
+                        <table class="table table-sm table-bordered">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>HSN Code</th>
+                                    <th>Description</th>
+                                </tr>
+                            </thead>
+                            <tbody id="modal-hsn-codes">
+                                <!-- HSN codes will be populated here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Batch GSTIN Update Modal -->
+            <div class="modal fade" id="batchUpdateModal" tabindex="-1" aria-labelledby="batchUpdateModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header bg-primary text-white">
+                            <h5 class="modal-title" id="batchUpdateModalLabel">Update GSTIN Details</h5>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div id="batch-update-initial" class="batch-update-section">
+                                <p>This will update the Excel file with additional details for all GSTINs in the current job:</p>
+                                <ul>
+                                    <li>Trade Name</li>
+                                    <li>Registration Date</li>
+                                    <li>HSN Codes</li>
+                                </ul>
+                                <p class="text-warning"><i class="bi bi-exclamation-triangle-fill"></i> This process may take some time depending on the number of GSTINs.</p>
+                                <div class="d-grid gap-2 mt-4">
+                                    <button id="start-batch-update-btn" class="btn btn-primary">
+                                        <i class="bi bi-arrow-repeat"></i> Start Update Process
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div id="batch-update-loading" class="batch-update-section d-none">
+                                <div class="text-center py-4">
+                                    <div class="spinner-border text-primary" role="status">
+                                        <span class="visually-hidden">Loading...</span>
+                                    </div>
+                                    <p class="mt-2">Starting batch update process...</p>
+                                </div>
+                            </div>
+                            
+                            <div id="batch-update-progress" class="batch-update-section d-none">
+                                <h5>Update Progress</h5>
+                                <div class="progress mb-3" style="height: 25px;">
+                                    <div id="batch-progress-bar" class="progress-bar progress-bar-striped progress-bar-animated"
+                                         role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
+                                        0%
+                                    </div>
+                                </div>
+                                <div class="row text-center mb-3">
+                                    <div class="col-md-4">
+                                        <div class="card bg-light">
+                                            <div class="card-body">
+                                                <h6>Total</h6>
+                                                <h3 id="batch-total-count">0</h3>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="card bg-success text-white">
+                                            <div class="card-body">
+                                                <h6>Successful</h6>
+                                                <h3 id="batch-success-count">0</h3>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="card bg-danger text-white">
+                                            <div class="card-body">
+                                                <h6>Failed</h6>
+                                                <h3 id="batch-failed-count">0</h3>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <p id="batch-status-message" class="text-center">Processing GSTINs...</p>
+                            </div>
+                            
+                            <div id="batch-update-complete" class="batch-update-section d-none">
+                                <div class="alert alert-success">
+                                    <h5><i class="bi bi-check-circle-fill"></i> Update Completed</h5>
+                                    <p>The GSTIN details have been updated in the Excel file.</p>
+                                </div>
+                                <div class="row text-center mb-3">
+                                    <div class="col-md-4">
+                                        <div class="card bg-light">
+                                            <div class="card-body">
+                                                <h6>Total</h6>
+                                                <h3 id="batch-complete-total">0</h3>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="card bg-success text-white">
+                                            <div class="card-body">
+                                                <h6>Successful</h6>
+                                                <h3 id="batch-complete-success">0</h3>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="card bg-danger text-white">
+                                            <div class="card-body">
+                                                <h6>Failed</h6>
+                                                <h3 id="batch-complete-failed">0</h3>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="d-grid gap-2 mt-4">
+                                    <a href="{{ url_for('download_results', job_id=job.id) }}" class="btn btn-success">
+                                        <i class="bi bi-download"></i> Download Updated Excel File
+                                    </a>
+                                </div>
+                            </div>
+                            
+                            <div id="batch-update-error" class="batch-update-section d-none">
+                                <div class="alert alert-danger">
+                                    <h5><i class="bi bi-exclamation-triangle-fill"></i> Error</h5>
+                                    <p id="batch-error-message">An error occurred during the batch update process.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>

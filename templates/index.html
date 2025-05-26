@@ -1,0 +1,101 @@
+{% extends "layout.html" %}
+
+{% block title %}PAN-GSTIN Mapper - Home{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8 offset-md-2">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h2 class="card-title mb-0">PAN-GSTIN Mapper</h2>
+            </div>
+            <div class="card-body">
+                <p class="lead">
+                    Upload an Excel/CSV file containing PAN numbers to extract corresponding GSTINs from the GST portal.
+                </p>
+                
+                <form action="{{ url_for('upload_file') }}" method="post" enctype="multipart/form-data" class="mt-4">
+                    <div class="mb-3">
+                        <label for="file" class="form-label fw-bold">Select Excel/CSV File</label>
+                        <input type="file" class="form-control" id="file" name="file" accept=".xlsx,.xls,.csv" required>
+                        <div class="form-text">
+                            The file should contain a column named "PAN" with valid PAN numbers.
+                        </div>
+                    </div>
+                    
+                    <div class="card mb-3">
+                        <div class="card-header">
+                            <h5 class="mb-0">Processing Parameters</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-check mb-3">
+                                        <input class="form-check-input" type="checkbox" id="headless" name="headless" checked>
+                                        <label class="form-check-label" for="headless">
+                                            Headless Mode
+                                        </label>
+                                        <div class="form-text">
+                                            Run browser in background without UI (recommended).
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-check mb-3">
+                                        <input class="form-check-input" type="checkbox" id="test_mode" name="test_mode">
+                                        <label class="form-check-label" for="test_mode">
+                                            Test Mode
+                                        </label>
+                                        <div class="form-text">
+                                            Process only the first PAN number with detailed logging.
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="limit" class="form-label">Processing Limit</label>
+                                        <input type="number" class="form-control" id="limit" name="limit" min="1" placeholder="Process all PANs">
+                                        <div class="form-text">
+                                            Maximum number of PAN numbers to process (leave empty for all).
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-check mb-3 mt-4">
+                                        <input class="form-check-input" type="checkbox" id="resume" name="resume">
+                                        <label class="form-check-label" for="resume">
+                                            Resume from Checkpoint
+                                        </label>
+                                        <div class="form-text">
+                                            Continue from last saved checkpoint if available.
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="alert alert-info">
+                        <h5>Important Notes:</h5>
+                        <ul class="mb-0">
+                            <li>The process may take some time depending on the number of PAN numbers.</li>
+                            <li>The application will solve captchas automatically using TrueCaptcha API.</li>
+                            <li>You can check the progress on the results page after submission.</li>
+                            <li>The final results will be saved in a two-sheet Excel file.</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="bi bi-upload"></i> Upload and Start Processing
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

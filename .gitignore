@@ -1,0 +1,32 @@
+# Logs
+*.log
+flask_pan_gstin.log
+gst_scraper.log
+pan_gstin_mapper_enhanced.log
+
+# Temporary files
+*.pyc
+__pycache__/
+.DS_Store
+
+# Runtime data
+pan_gstin_checkpoint.json
+jobs.json
+
+# Directories
+screenshots/
+uploads/
+results/
+temp/
+
+# Excel files in root directory (keep them in uploads directory)
+/*.xlsx
+/*.xls
+/*.csv
+
+# Environment
+.env
+.venv
+env/
+venv/
+ENV/
