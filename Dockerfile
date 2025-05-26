@@ -41,6 +41,9 @@ ENV CHROME_BIN=/usr/bin/chromium
 ENV CHROME_PATH=/usr/lib/chromium/
 ENV CHROMEDRIVER_PATH=/usr/bin/chromedriver
 
+# Set application port
+ENV PORT=8000
+
 # Set up working directory
 WORKDIR /app
 
@@ -57,7 +60,7 @@ COPY static/ ./static/
 RUN mkdir -p uploads results screenshots
 
 # Expose port
-EXPOSE 5000
+EXPOSE 8000
 
 # Run the application
 CMD ["python", "app.py"]
