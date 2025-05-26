@@ -554,5 +554,5 @@ if __name__ == '__main__':
     app.run(
         debug=os.environ.get('FLASK_ENV') == 'development',
         host='0.0.0.0',  # Bind to all interfaces for Docker
-        port=int(os.environ.get('PORT', 5000))
+        port=int(os.environ.get('PORT', 8000))  # Default to port 8000
     )
