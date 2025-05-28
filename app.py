@@ -204,14 +204,14 @@ def job_status(job_id):
 
 def prepare_gstin_only_file(original_file_path):
     """
-    Create a new Excel or CSV file with only the PAN_Reference and GSTIN columns
+    Create a new Excel or CSV file with PAN_Reference, GSTIN, and GSTIN Status columns
     from the GSTIN sheet of the original file.
     
     Args:
         original_file_path: Path to the original Excel file with both sheets
         
     Returns:
-        str: Path to the new file with only PAN_Reference and GSTIN columns
+        str: Path to the new file with PAN_Reference, GSTIN, and GSTIN Status columns
     """
     try:
         logger.info(f"Preparing simplified GSTIN file from {original_file_path}")
@@ -237,28 +237,40 @@ def prepare_gstin_only_file(original_file_path):
             logger.error(f"Error reading GSTIN data: {e}")
             return None
         
-        # Filter to keep only PAN_Reference and GSTIN columns
-        if "PAN_Reference" in gstin_df.columns and "GSTIN" in gstin_df.columns:
+        # Filter to keep PAN_Reference, GSTIN, and GSTIN Status columns
+        if "PAN_Reference" in gstin_df.columns and "GSTIN" in gstin_df.columns and "GSTIN Status" in gstin_df.columns:
+            simplified_df = gstin_df[["PAN_Reference", "GSTIN", "GSTIN Status"]]
+            logger.info(f"Filtered to keep PAN_Reference, GSTIN, and GSTIN Status columns")
+        elif "PAN_Reference" in gstin_df.columns and "GSTIN" in gstin_df.columns:
             simplified_df = gstin_df[["PAN_Reference", "GSTIN"]]
-            logger.info(f"Filtered to keep only PAN_Reference and GSTIN columns")
+            logger.info(f"GSTIN Status column not found, keeping only PAN_Reference and GSTIN columns")
         else:
             logger.warning(f"Required columns not found, keeping all columns")
             simplified_df = gstin_df
             
         # Create a temporary file for the simplified data
         temp_dir = os.path.join(app.config['RESULTS_FOLDER'], 'temp')
-        os.makedirs(temp_dir, exist_ok=True)
+        os.makedirs(temp_dir, exist_ok=True, mode=0o777)  # Add mode parameter for full permissions
         
         # Generate a unique filename
         filename = os.path.basename(original_file_path)
         base_name = os.path.splitext(filename)[0]
         
         # Save as CSV by default for simplicity
-        simplified_path = os.path.join(temp_dir, f"{base_name}_simplified_{int(time.time())}.csv")
+        simplified_path = os.path.abspath(os.path.join(temp_dir, f"{base_name}_simplified_{int(time.time())}.csv"))
         
         # Save the simplified data
         simplified_df.to_csv(simplified_path, index=False)
         logger.info(f"Created simplified file at {simplified_path}")
+        
+        # Check if the file was created and has content
+        if os.path.exists(simplified_path):
+            file_size = os.path.getsize(simplified_path)
+            logger.info(f"Created file size: {file_size} bytes")
+            if file_size == 0:
+                logger.warning("Warning: Created file is empty!")
+        else:
+            logger.error(f"Error: File was not created at {simplified_path}")
         
         return simplified_path
         
@@ -554,5 +566,5 @@ if __name__ == '__main__':
     app.run(
         debug=os.environ.get('FLASK_ENV') == 'development',
         host='0.0.0.0',  # Bind to all interfaces for Docker
-        port=int(os.environ.get('PORT', 8000))  # Default to port 8000
+        port=int(os.environ.get('PORT', 9001))  # Default to port 9001
     )

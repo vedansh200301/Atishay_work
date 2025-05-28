@@ -63,7 +63,7 @@ PAN_SHEET_COLUMNS = [
 GSTIN_SHEET_COLUMNS = [
     "PAN_Reference",
     "GSTIN",
-    "GSTIN_Status",
+    "GSTIN Status",
     "State",
     "Trade_Name",
     "Registration_Date",
@@ -213,7 +213,7 @@ def validate_excel_structure(file_path):
                             new_row = {
                                 "PAN_Reference": pan,
                                 "GSTIN": gstin,
-                                "GSTIN_Status": row.get("GSTIN Status", "") if pd.notna(row.get("GSTIN Status", "")) else "",
+                                "GSTIN Status": row.get("GSTIN Status", "") if pd.notna(row.get("GSTIN Status", "")) else "",
                                 "State": row.get("State", "") if pd.notna(row.get("State", "")) else "",
                                 "Last_Updated": datetime.datetime.now().isoformat()
                             }
@@ -410,7 +410,7 @@ def update_excel_with_results(file_path, pan_df, gstin_df, results_dict):
                     new_gstin_rows.append({
                         "PAN_Reference": pan,
                         "GSTIN": result["GSTIN"],
-                        "GSTIN_Status": result.get("GSTIN Status", ""),
+                        "GSTIN Status": result.get("GSTIN Status", ""),
                         "State": result.get("State", ""),
                         "Trade_Name": result.get("Trade_Name", ""),
                         "Registration_Date": result.get("Registration_Date", ""),
@@ -1138,26 +1138,16 @@ def process_pan_numbers(file_path, headless=False, test_mode=False, limit=None, 
     
     # Set up Chrome options
     chrome_options = Options()
-    if headless:
-        chrome_options.add_argument("--headless")
-    chrome_options.add_argument("--window-size=1920,1080")
-    chrome_options.add_argument("--disable-notifications")
-    chrome_options.add_argument("--disable-gpu")
-    chrome_options.add_argument("--disable-extensions")
-    chrome_options.add_argument("--disable-infobars")
-    chrome_options.add_argument("--disable-popup-blocking")
-    chrome_options.add_argument("--disable-dev-shm-usage")
-    chrome_options.add_argument("--no-sandbox")
+    chrome_options.add_argument('--no-sandbox')
+    chrome_options.add_argument('--headless')
+    chrome_options.add_argument('--disable-dev-shm-usage')
+    chrome_options.add_argument('--disable-gpu')
+    chrome_options.binary_location = "/usr/bin/chromium"
     
-    # Initialize the browser
-    try:
-        driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
-        driver.implicitly_wait(10)
-        logger.info("Chrome driver initialized successfully")
-    except Exception as e:
-        logger.error(f"Error initializing Chrome driver: {e}")
-        print(f"\nERROR: Failed to initialize Chrome driver: {e}")
-        return
+    service = Service('/usr/bin/chromedriver')
+    driver = webdriver.Chrome(service=service, options=chrome_options)
+    driver.implicitly_wait(10)
+    logger.info("Chrome driver initialized successfully")
     
     try:
         # Navigate to the GST portal
@@ -1191,7 +1181,7 @@ def process_pan_numbers(file_path, headless=False, test_mode=False, limit=None, 
                     except:
                         pass
                     
-                    driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
+                    driver = webdriver.Chrome(service=service, options=chrome_options)
                     driver.implicitly_wait(10)
                     logger.info("Browser restarted")
                     
@@ -1292,7 +1282,7 @@ def process_pan_numbers(file_path, headless=False, test_mode=False, limit=None, 
                     # If we can't recover, restart the browser
                     try:
                         driver.quit()
-                        driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
+                        driver = webdriver.Chrome(service=service, options=chrome_options)
                         driver.get(GST_PORTAL_URL)
                         logger.info("Restarted browser after error")
                     except Exception as e2:

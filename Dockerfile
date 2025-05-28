@@ -28,18 +28,17 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libxkbcommon0 \
     libxrandr2 \
     xdg-utils \
-    && rm -rf /var/lib/apt/lists/*
-
-# Install Chrome for headless browser automation
-RUN apt-get update && apt-get install -y --no-install-recommends \
     chromium \
     chromium-driver \
     && rm -rf /var/lib/apt/lists/*
 
-# Set environment variables for Chrome
+# Set Chrome options for Chromium
 ENV CHROME_BIN=/usr/bin/chromium
 ENV CHROME_PATH=/usr/lib/chromium/
 ENV CHROMEDRIVER_PATH=/usr/bin/chromedriver
+
+# Additional Chrome flags for running in container
+ENV CHROME_FLAGS="--no-sandbox --headless --disable-gpu --disable-dev-shm-usage"
 
 # Set application port
 ENV PORT=8000
@@ -56,8 +55,11 @@ COPY app.py pan_gstin_mapper_enhanced.py ultimate.py ./
 COPY templates/ ./templates/
 COPY static/ ./static/
 
-# Create necessary directories
-RUN mkdir -p uploads results screenshots
+# Create necessary directories and set permissions
+RUN mkdir -p uploads results screenshots results/temp \
+    && chmod -R 777 results uploads screenshots results/temp \
+    && chmod -R 777 /usr/lib/chromium/ \
+    && chmod 777 /usr/bin/chromedriver
 
 # Expose port
 EXPOSE 8000
