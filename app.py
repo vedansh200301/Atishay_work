@@ -543,14 +543,11 @@ def process_batch_gstin_update(job_id, gstins, excel_file):
 
 @app.route('/batch_update_status/<job_id>')
 def batch_update_status(job_id):
-    """API endpoint to get batch update job status"""
-    if job_id not in jobs:
-        return jsonify({'error': 'Job not found'}), 404
+    """API to get status of batch update process"""
+    if job_id not in jobs or 'batch_update' not in jobs[job_id]:
+        return jsonify({'error': 'Batch update job not found'}), 404
     
-    if jobs[job_id]['type'] != 'batch_gstin_update':
-        return jsonify({'error': 'Not a batch update job'}), 400
-    
-    return jsonify(jobs[job_id])
+    return jsonify(jobs[job_id]['batch_update'])
 
 if __name__ == '__main__':
     # Load existing jobs data
@@ -564,9 +561,6 @@ if __name__ == '__main__':
     # Determine if running in Docker
     in_docker = os.environ.get('DOCKER_CONTAINER', False)
     
-    # Run the Flask app
-    app.run(
-        debug=os.environ.get('FLASK_ENV') == 'development',
-        host='0.0.0.0',  # Bind to all interfaces for Docker
-        port=int(os.environ.get('PORT', 9001))  # Default to port 9001
-    )
+    # Running on 0.0.0.0 allows it to be accessible from outside the container
+    # The port is set to 8001 to match the Nginx proxy_pass configuration
+    app.run(host='0.0.0.0', port=8001)
